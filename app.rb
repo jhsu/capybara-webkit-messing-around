@@ -10,15 +10,23 @@ class MyApp < Sinatra::Base
   end
 
   get '/' do
-    erb "hello"
-  end
-
-  get '/zomg' do
-    erb "zomg <a href='/'>Home</a>"
+    erb <<-HTML
+<html>
+<head><title>hello</title></head>
+<body>
+<script type="text/javascript">
+var box = document.getElementById('content');
+box.innerHTML = 'zomg';
+</script>
+<p id='content'></p>
+</body>
+<html>
+HTML
   end
 end
 
 Capybara.configure do |c|
+  c.current_driver = :rack_test
   c.javascript_driver = :webkit
   c.app = MyApp
 end
@@ -26,12 +34,8 @@ end
 class BasicTest < Test::Unit::TestCase
   include Capybara
   def test_basic_url
-    visit '/zomg'
+    visit '/'
     look_for = 'zomg'
-    assert page.has_content?(look_for), "'#{look_for}' not found in content."
-
-    click_link("Home")
-    look_for = 'hello'
-    assert page.has_content?(look_for), "'#{look_for}' not found in content."
+    assert find("p#content").text == look_for, "'#{look_for}' not found in content."
   end
 end
